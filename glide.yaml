@@ -1,2 +1,4 @@
 package: github.com/TechCatsLab/rumour
-import: []
+import:
+- package: github.com/urfave/negroni
+  version: ^0.3.0

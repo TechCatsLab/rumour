@@ -1,6 +1,20 @@
-hash: 2522bcde7ccfbfcc613117906f1c32ed5ebc4dedb589c748ffe80e9e364f2a69
-updated: 2018-05-21T16:27:49.605985957+08:00
+hash: ca951c28dbaeccac641dd228fe1cb030a2926be5bdb090485e138a967cde1d90
+updated: 2018-05-27T09:42:30.123745+08:00
 imports:
+- name: github.com/dgrijalva/jwt-go
+  version: 06ea1031745cb8b3dab3f6a236daf2b0aa468b7e
 - name: github.com/urfave/negroni
   version: 5dbbc83f748fc3ad38585842b0aedab546d0ea1e
+- name: go.uber.org/atomic
+  version: 1ea20fb1cbb1cc08cbd0d913a96dead89aa18289
+- name: go.uber.org/multierr
+  version: 3c4937480c32f4c13a875a1829af76c98ca3d40a
+- name: go.uber.org/zap
+  version: eeedf312bc6c57391d84767a4cd413f02a917974
+  subpackages:
+  - buffer
+  - internal/bufferpool
+  - internal/color
+  - internal/exit
+  - zapcore
 testImports: []

@@ -1,0 +1,16 @@
+{
+  "serverAddr": ":7000",
+
+  "middleware": {
+    "cors": {
+      "host": ["*"]
+    },
+
+    "secretKey" :"PXL0we7gqrgskjnPwiXXwVeXY4pFGvcnq4zImdN1L4"
+  },
+
+  "websocket": {
+    "readBufferSize": 4096,
+    "writeBufferSize": 4096
+  }
+}

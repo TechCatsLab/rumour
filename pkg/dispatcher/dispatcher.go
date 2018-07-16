@@ -7,32 +7,53 @@ package dispatcher
 
 import (
 	"errors"
+	"context"
 
 	"github.com/TechCatsLab/rumour"
+	"github.com/TechCatsLab/rumour/constants"
+	"github.com/TechCatsLab/rumour/pkg/log"
+	"github.com/TechCatsLab/scheduler"
 )
 
-var ErrDispatch = errors.New("Can't dispatch the message")
+const (
+	ctxKeyMessage = "message"
+)
+
+var (
+	ErrDispatch = errors.New("Can't dispatch the message.")
+)
 
 type dispatcher struct {
-	hub rumour.Hub
+	pool *scheduler.Pool
+	hub  rumour.Hub
 }
 
-// NewQueue - new a messageQueue.
+// NewDispatcher new a dispatcher.
 func NewDispatcher(hub rumour.Hub) rumour.Dispatcher {
-	return &dispatcher{hub}
+	return &dispatcher{
+		pool: scheduler.New(constants.PoolQueueSize, constants.PoolWorkerSize),
+		hub:  hub,
+	}
 }
 
-// Hub -
+// Hub return hub.
 func (d *dispatcher) Hub() rumour.Hub {
 	return d.hub
 }
 
-// Dispatch -
 func (d *dispatcher) Dispatch(message rumour.Message) error {
+	ctx := context.WithValue(context.Background(), ctxKeyMessage, message)
+
+	return d.pool.Schedule(scheduler.TaskFunc(d.dispatch), ctx)
+}
+
+func (d *dispatcher) dispatch(c context.Context) error {
+	message := c.Value(ctxKeyMessage).(rumour.Message)
 	userID := message.Target()
 
 	conns, err := d.Hub().ConnManager().Query(userID)
 	if err != nil {
+		log.Error("[Dispatcher Dispatch] Query Connection err", log.Err(err))
 		return err
 	}
 

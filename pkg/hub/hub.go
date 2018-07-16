@@ -12,8 +12,10 @@ import (
 	"github.com/TechCatsLab/rumour/pkg/queue"
 	"github.com/TechCatsLab/rumour/pkg/log"
 	"github.com/TechCatsLab/rumour/constants"
+	"context"
 )
 
+var ctx context.Context
 type hub struct {
 	connectionManager rumour.ConnectionManager
 	dispatcher        rumour.Dispatcher
@@ -56,9 +58,7 @@ func (h *hub) handleMessage() error {
 		return err
 	}
 
-	if err = h.HubDispatcher().Dispatch(msg); err != nil {
-		return err
-	}
+	h.dispatcher.Dispatch(msg)
 
 	return nil
 }

@@ -39,8 +39,9 @@ var (
 )
 
 func NewEndpoint() rumour.Endpoint {
+	hubConfig := hub.New(hub.HubQueueSize, hub.DispatcherScheduler)
 	ep := &Endpoint{
-		hub:    hub.NewHub(),
+		hub: hubConfig.Create(),
 		server: server.NewEntrypoint(configuration, nil),
 		router: server.NewRouter(),
 		upgrader: &websocket.Upgrader{

@@ -14,7 +14,6 @@ import (
 	"github.com/TechCatsLab/rumour"
 	"github.com/TechCatsLab/rumour/pkg/log"
 	"github.com/TechCatsLab/rumour/pkg/queue"
-	"github.com/TechCatsLab/rumour/constants"
 )
 
 var ErrDifferentConn = errors.New("different connection")
@@ -35,7 +34,7 @@ func NewConn(hub rumour.Hub, ws *websocket.Conn, parser rumour.Parser, identify 
 		hub:      hub,
 		parser:   parser,
 		shutdown: make(chan struct{}),
-		queue:    queue.NewChannelQueue(constants.ConnQueueSize),
+		queue:    queue.NewChannelQueue(1024),
 		identify: identify,
 	}
 

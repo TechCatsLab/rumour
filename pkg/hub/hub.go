@@ -8,14 +8,11 @@ package hub
 import (
 	"github.com/TechCatsLab/rumour"
 	"github.com/TechCatsLab/rumour/pkg/dispatcher"
+	"github.com/TechCatsLab/rumour/pkg/log"
 	"github.com/TechCatsLab/rumour/pkg/manager"
 	"github.com/TechCatsLab/rumour/pkg/queue"
-	"github.com/TechCatsLab/rumour/pkg/log"
-	"github.com/TechCatsLab/rumour/constants"
-	"context"
 )
 
-var ctx context.Context
 type hub struct {
 	connectionManager rumour.ConnectionManager
 	dispatcher        rumour.Dispatcher
@@ -24,14 +21,14 @@ type hub struct {
 }
 
 // NewHub - create a new Hub.
-func NewHub() rumour.Hub {
-	hub := &hub {
+func newHub(c *Config) rumour.Hub {
+	hub := &hub{
 		shutdown: make(chan struct{}),
-		Queue:    queue.NewChannelQueue(constants.HubQueueSize),
+		Queue:    queue.NewChannelQueue(c.IncomingMessageQueueSize),
 	}
 
 	hub.connectionManager = manager.NewManager(hub)
-	hub.dispatcher = dispatcher.NewDispatcher(hub)
+	hub.dispatcher = dispatcher.NewDispatcher(hub, c.DispatcherQueueSize, c.DispatcherWorkers)
 
 	go hub.start()
 	return hub

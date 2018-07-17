@@ -10,7 +10,6 @@ import (
 	"context"
 
 	"github.com/TechCatsLab/rumour"
-	"github.com/TechCatsLab/rumour/constants"
 	"github.com/TechCatsLab/rumour/pkg/log"
 	"github.com/TechCatsLab/scheduler"
 )
@@ -29,9 +28,9 @@ type dispatcher struct {
 }
 
 // NewDispatcher new a dispatcher.
-func NewDispatcher(hub rumour.Hub) rumour.Dispatcher {
+func NewDispatcher(hub rumour.Hub, qsize,workers int) rumour.Dispatcher {
 	return &dispatcher{
-		pool: scheduler.New(constants.PoolQueueSize, constants.PoolWorkerSize),
+		pool: scheduler.New(qsize, workers),
 		hub:  hub,
 	}
 }

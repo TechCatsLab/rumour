@@ -9,7 +9,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/TechCatsLab/apix/server"
+	"github.com/TechCatsLab/apix/http/server"
 	"github.com/gorilla/websocket"
 
 	"github.com/TechCatsLab/rumour"

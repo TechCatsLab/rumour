@@ -1,49 +1,68 @@
-hash: bc6fc16d1ef3bfcdec571d26f8eb885061dc2103dfd216baedfe118352d79c07
-updated: 2018-07-08T10:16:36.144179981+08:00
+hash: 5d418c0a82f50279e49f8816e8dcc2c347afeae6e164649f24b57857b2f2e875
+updated: 2018-07-19T19:32:01.466201+08:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 06ea1031745cb8b3dab3f6a236daf2b0aa468b7e
 - name: github.com/fsnotify/fsnotify
   version: c2828203cd70a50dcccfb2761f8b1f8ceef9a8e9
+- name: github.com/go-playground/locales
+  version: f63010822830b6fe52288ee52d5a1151088ce039
+  subpackages:
+  - currency
+- name: github.com/go-playground/universal-translator
+  version: 71201497bace774495daed26a3874fd339e0b538
+- name: github.com/gorilla/context
+  version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
+- name: github.com/gorilla/mux
+  version: cb4698366aa625048f3b815af6a0dea8aef9280a
 - name: github.com/gorilla/websocket
-  version: ea4d1f681babbce9545c9c5f3d5194a789c89f5b
+  version: 5ed622c449da6d44c3c8329331ff47a9e5844f71
 - name: github.com/hashicorp/hcl
   version: ef8a98b0bbce4a65b5aa4c368430a80ddc533168
   subpackages:
   - hcl/ast
   - hcl/parser
+  - hcl/printer
   - hcl/scanner
   - hcl/strconv
   - hcl/token
   - json/parser
   - json/scanner
   - json/token
+- name: github.com/inconshreveable/mousetrap
+  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/json-iterator/go
   version: ab8a2e0c74be9d3be70b3184d9acc634935ded82
 - name: github.com/magiconair/properties
   version: c2353362d570a7bfa228149c62842019201cfb71
 - name: github.com/mitchellh/mapstructure
-  version: bb74f1db0675b241733089d5a1faa5dd8b0ef57b
+  version: f15292f7a699fcc1a38a80977f80a046874ba8ac
 - name: github.com/modern-go/concurrent
   version: bacd9c7ef1dd9b15be4a9909b8ac7a4e313eec94
 - name: github.com/modern-go/reflect2
-  version: 4b7aa43c6742a2c18fdef89dd197aaae7dac7ccd
+  version: 94122c33edd36123c84d5368cfb2b69df93a0ec8
 - name: github.com/pelletier/go-toml
-  version: 603baefff989777996bf283da430d693e78eba3a
+  version: 5c5490133daa8660ec676ca8b096cc27e223beaa
 - name: github.com/spf13/afero
   version: 787d034dfe70e44075ccc060d346146ef53270ad
   subpackages:
   - mem
 - name: github.com/spf13/cast
   version: 8965335b8c7107321228e3e3702cab9832751bac
+- name: github.com/spf13/cobra
+  version: a114f312e075f65bf30d6d9a1430113f857e543b
 - name: github.com/spf13/jwalterweatherman
   version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
 - name: github.com/spf13/pflag
   version: 3ebe029320b2676d667ae88da602a5f854788a8a
 - name: github.com/spf13/viper
-  version: 25b30aa063fc18e48662b86996252eabdcf2f0c7
+  version: d493c32b69b8c6f2377bf30bc4d70267ffbc0793
 - name: github.com/TechCatsLab/apix
-  version: 743ab4246d690959f66443a9f90e45c2d6c094da
+  version: a001e212027db82d53bec6058756798e7306ab4a
+  subpackages:
+  - http/server
+- name: github.com/TechCatsLab/scheduler
+  version: 49ffa1ba65a762b90e0ef2a1dcb1bbdc94544dec
 - name: github.com/urfave/negroni
   version: 5dbbc83f748fc3ad38585842b0aedab546d0ea1e
 - name: go.uber.org/atomic
@@ -59,14 +78,16 @@ imports:
   - internal/exit
   - zapcore
 - name: golang.org/x/sys
-  version: 43e60d72a8e2bd92ee98319ba9a384a0e9837c08
+  version: ac767d655b305d4e9612f5f6e33120b9176c4ad4
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: b19bf474d317b857955b12035d2c5acb57ce8b01
+  version: 0605a8320aceb4207a5fb3521281e17ec2075476
   subpackages:
   - transform
   - unicode/norm
+- name: gopkg.in/go-playground/validator.v9
+  version: ab2a8a99087e827c9af87ed6777ba897348fb178
 - name: gopkg.in/yaml.v2
   version: 5420a8b6744d3b0345ab293f6fcba19c978f1183
 testImports: []

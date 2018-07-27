@@ -14,13 +14,17 @@ import (
 	"github.com/TechCatsLab/rumour"
 	"github.com/TechCatsLab/rumour/pkg/log"
 	"github.com/TechCatsLab/rumour/pkg/queue"
+	"github.com/TechCatsLab/rumour/pkg/hub"
+	"github.com/TechCatsLab/rumour/pkg/message"
 )
 
-var ErrDifferentConn = errors.New("different connection")
+var (
+	ErrDifferentConn = errors.New("different connection")
+)
+
 type conn struct {
-	hub      rumour.Hub
+	hub      hub.Hub
 	ws       *websocket.Conn
-	parser   rumour.Parser
 	queue    rumour.Queue
 	identify rumour.Identify
 	shutdown chan struct{}
@@ -28,11 +32,10 @@ type conn struct {
 }
 
 //NewConn - create a new Conn.
-func NewConn(hub rumour.Hub, ws *websocket.Conn, parser rumour.Parser, identify rumour.Identify) rumour.Connection {
+func NewConn(hub hub.Hub, ws *websocket.Conn, identify rumour.Identify) rumour.Connection {
 	conn := &conn{
 		ws:       ws,
 		hub:      hub,
-		parser:   parser,
 		shutdown: make(chan struct{}),
 		queue:    queue.NewChannelQueue(1024),
 		identify: identify,
@@ -89,7 +92,7 @@ func (c *conn) handleRead() error {
 		return ErrDifferentConn
 	}
 
-	return c.Hub().Dispatch(msg)
+	return c.hub.Put(msg)
 }
 
 func (c *conn) handleWrite() error {
@@ -102,11 +105,6 @@ func (c *conn) handleWrite() error {
 	return c.ws.WriteJSON(msg)
 }
 
-// Hub return the hub.
-func (c *conn) Hub() rumour.Hub {
-	return c.hub
-}
-
 // Identify return the identify.
 func (c *conn) Identify() rumour.Identify {
 	return c.identify
@@ -116,16 +114,32 @@ func (c *conn) Identify() rumour.Identify {
 func (c *conn) receive() (rumour.Message, error) {
 	_, b, err := c.ws.ReadMessage()
 	if err != nil {
-		log.Error("[Connection Receive]Can't read from websocket", log.Err(err))
+		log.Error("[Connection Receive]Can't read from webSocket", log.Err(err))
 		return nil, err
 	}
 
-	msg, err := c.parser.Parse(b)
+	msg, err := c.parse(b)
 	if err != nil {
+		log.Error("[Connection] Parse err", log.Err(err))
 		return nil, err
 	}
 
 	return msg, nil
+}
+
+func (c *conn) parse(data []byte) (rumour.Message, error) {
+	var m message.Message
+
+	err := m.Unmarshal(data)
+	if err != nil {
+		return nil, err
+	}
+
+	if m.From =="" || m.To == "" || m.Type == 0 {
+		return nil, errors.New("param err")
+	}
+
+	return &m, nil
 }
 
 // Send a message to the client.
@@ -136,7 +150,7 @@ func (c *conn) Send(message rumour.Message) error {
 // Stop the connection.
 func (c *conn) Stop() {
 	c.stop.Do(func() {
-		c.hub.ConnManager().Remove(c)
+		c.hub.ConnectionManager.Remove(c)
 		c.ws.Close()
 		c.queue.Close()
 		close(c.shutdown)

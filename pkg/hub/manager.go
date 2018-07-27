@@ -3,7 +3,7 @@
  *     Initial: 2018/05/31        Tong Yuehong
  */
 
-package manager
+package hub
 
 import (
 	"sync"
@@ -14,22 +14,21 @@ import (
 )
 
 var ErrConnNotExist = errors.New("connection not exists")
-type manager struct {
-	hub rumour.Hub
+
+type ConnectionManager struct {
 	conns map[string][]rumour.Connection
 	mux   sync.RWMutex
 }
 
 // NewManager create a new connection manager.
-func NewManager(h rumour.Hub) rumour.ConnectionManager {
-	return &manager{
-		hub: h,
+func NewConnectionManager() *ConnectionManager{
+	return &ConnectionManager{
 		conns: make(map[string][]rumour.Connection),
 	}
 }
 
 // Add a connection.
-func (m *manager) Add(connection rumour.Connection) error {
+func (m *ConnectionManager) Add(connection rumour.Connection) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
@@ -50,7 +49,7 @@ func (m *manager) Add(connection rumour.Connection) error {
 }
 
 // Remove a connection.
-func (m *manager) Remove(connection rumour.Connection) error {
+func (m *ConnectionManager) Remove(connection rumour.Connection) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
@@ -77,7 +76,7 @@ func (m *manager) Remove(connection rumour.Connection) error {
 }
 
 // Query someone's connection.
-func (m *manager) Query(id rumour.Identify) ([]rumour.Connection, error) {
+func (m *ConnectionManager) Query(id rumour.Identify) ([]rumour.Connection, error) {
 	m.mux.RLock()
 	defer m.mux.RUnlock()
 

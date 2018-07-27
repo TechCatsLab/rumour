@@ -5,10 +5,6 @@
 
 package hub
 
-import (
-	"github.com/TechCatsLab/rumour"
-)
-
 type Config struct {
 	IncomingMessageQueueSize int
 
@@ -16,7 +12,7 @@ type Config struct {
 	DispatcherWorkers   int
 }
 
-func New(fn ...func(*Config)) *Config {
+func NewConfig(fn ...func(*Config)) *Config {
 	c := &Config{}
 
 	for _, f := range fn {
@@ -26,6 +22,6 @@ func New(fn ...func(*Config)) *Config {
 	return c
 }
 
-func (c *Config) Create() rumour.Hub {
+func (c *Config) Create() *Hub {
 	return newHub(c)
 }

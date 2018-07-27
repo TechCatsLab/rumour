@@ -7,5 +7,5 @@ package rumour
 
 // Endpoint -
 type Endpoint interface {
-	Serve()
+	Serve() error
 }

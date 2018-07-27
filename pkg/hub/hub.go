@@ -6,35 +6,47 @@
 package hub
 
 import (
+	"context"
+	"errors"
+
+	"github.com/TechCatsLab/scheduler"
+
 	"github.com/TechCatsLab/rumour"
-	"github.com/TechCatsLab/rumour/pkg/dispatcher"
 	"github.com/TechCatsLab/rumour/pkg/log"
-	"github.com/TechCatsLab/rumour/pkg/manager"
 	"github.com/TechCatsLab/rumour/pkg/queue"
 )
 
-type hub struct {
-	connectionManager rumour.ConnectionManager
-	dispatcher        rumour.Dispatcher
+const (
+	ctxKeyMessage = "single_message"
+)
+
+var (
+	ErrDispatch = errors.New("Can't dispatch the message.")
+)
+
+type Hub struct {
+	ConnectionManager *ConnectionManager
+	pool              *scheduler.Pool
 	rumour.Queue
 	shutdown chan struct{}
 }
 
 // NewHub - create a new Hub.
-func newHub(c *Config) rumour.Hub {
-	hub := &hub{
-		shutdown: make(chan struct{}),
-		Queue:    queue.NewChannelQueue(c.IncomingMessageQueueSize),
+func newHub(c *Config) *Hub {
+	hub := &Hub{
+		ConnectionManager: NewConnectionManager(),
+		pool:              scheduler.New(c.DispatcherQueueSize, c.DispatcherWorkers),
+		shutdown:          make(chan struct{}),
+		Queue:             queue.NewChannelQueue(c.IncomingMessageQueueSize),
 	}
 
-	hub.connectionManager = manager.NewManager(hub)
-	hub.dispatcher = dispatcher.NewDispatcher(hub, c.DispatcherQueueSize, c.DispatcherWorkers)
+	hub.ConnectionManager = NewConnectionManager()
 
 	go hub.start()
 	return hub
 }
 
-func (h *hub) start() {
+func (h *Hub) start() {
 	for {
 		select {
 		case <-h.shutdown:
@@ -49,30 +61,58 @@ func (h *hub) start() {
 }
 
 //
-func (h *hub) handleMessage() error {
+func (h *Hub) handleMessage() error {
 	msg, err := h.Queue.Get()
 	if err != nil {
 		return err
 	}
 
-	h.dispatcher.Dispatch(msg)
+	h.Dispatch(msg)
 
 	return nil
-}
-
-// Dispatcher return the dispatcher.
-func (h *hub) HubDispatcher() rumour.Dispatcher {
-	return h.dispatcher
-}
-
-// ConnManager return connectionManager.
-func (h *hub) ConnManager() rumour.ConnectionManager {
-	return h.connectionManager
 }
 
 // Dispatch a message to the queue.
-func (h *hub) Dispatch(message rumour.Message) error {
+func (h *Hub) Put(message rumour.Message) error {
 	h.Queue.Put(message)
 
 	return nil
+}
+
+
+func (hub *Hub) Dispatch(message rumour.Message) error {
+	ctx := context.WithValue(context.Background(), ctxKeyMessage, message)
+
+	return hub.pool.Schedule(scheduler.TaskFunc(hub.dispatch), ctx)
+}
+
+func (hub *Hub) dispatch(c context.Context) error {
+	message := c.Value(ctxKeyMessage).(rumour.Message)
+	userID := message.Target()
+
+	conns, err := hub.ConnectionManager.Query(userID)
+	if err != nil {
+		log.Error("[Dispatcher Dispatch] Query Connection err", log.Err(err))
+		return err
+	}
+
+	succeed := false
+	for _, conn := range conns {
+		err = conn.Send(message)
+		if err != nil {
+			continue
+		}
+
+		succeed = true
+	}
+
+	if succeed {
+		return nil
+	}
+
+	for _, conn := range conns {
+		conn.Stop()
+	}
+
+	return ErrDispatch
 }

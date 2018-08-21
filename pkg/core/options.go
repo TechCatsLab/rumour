@@ -3,9 +3,11 @@
  *     Initial: 2018/07/17        Tong Yuehong
  */
 
-package hub
+package core
 
-import "runtime"
+import (
+	"runtime"
+)
 
 func HubQueueSize(c *Config) {
 	c.IncomingMessageQueueSize = 1024 * 16

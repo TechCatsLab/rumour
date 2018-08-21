@@ -3,7 +3,7 @@
  *     Initial: 2018/07/06        Tong Yuehong
  */
 
-package hub
+package core
 
 type Config struct {
 	IncomingMessageQueueSize int

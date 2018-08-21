@@ -9,11 +9,8 @@ import (
 	"github.com/TechCatsLab/rumour"
 	"github.com/TechCatsLab/rumour/pkg/core"
 	"github.com/TechCatsLab/rumour/pkg/endpoint/websocket"
-	"github.com/TechCatsLab/rumour/pkg/hub"
 )
 
 func CreateWebsocketServer() rumour.Endpoint {
-	return websocket.NewEndpoint(
-		core.NewLogic(*hub.NewConfig(hub.HubQueueSize, hub.DispatcherScheduler).Create()),
-	)
+	return websocket.NewEndpoint(core.NewConfig(core.HubQueueSize, core.DispatcherScheduler).Create())
 }

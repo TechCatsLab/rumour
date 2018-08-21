@@ -6,13 +6,20 @@
 package websocket
 
 import (
+	"fmt"
+	"database/sql"
 	"net/http"
+	_ "github.com/go-sql-driver/mysql"
 
 	"github.com/TechCatsLab/apix/http/server"
 	"github.com/gorilla/websocket"
 
-	"github.com/TechCatsLab/rumour/pkg/core"
+	log "github.com/TechCatsLab/logging/logrus"
 	"github.com/TechCatsLab/rumour"
+	"github.com/TechCatsLab/rumour/pkg/conn"
+	"github.com/TechCatsLab/rumour/pkg/core"
+	"github.com/TechCatsLab/rumour/pkg/endpoint/api"
+	"github.com/TechCatsLab/rumour/pkg/store/mysql"
 )
 
 const (
@@ -20,9 +27,10 @@ const (
 )
 
 type Endpoint struct {
-	logic    *core.Logic
+	Hub      *core.Hub
 	server   *server.Entrypoint
 	router   *server.Router
+	wsRouter *WebSocketRouter
 	upgrader *websocket.Upgrader
 }
 
@@ -33,9 +41,9 @@ var (
 	}
 )
 
-func NewEndpoint(logic *core.Logic) rumour.Endpoint {
+func NewEndpoint(hub *core.Hub) rumour.Endpoint {
 	ep := &Endpoint{
-		logic: logic,
+		Hub:    hub,
 		server: server.NewEntrypoint(configuration, nil),
 		router: server.NewRouter(),
 		upgrader: &websocket.Upgrader{
@@ -47,8 +55,67 @@ func NewEndpoint(logic *core.Logic) rumour.Endpoint {
 		},
 	}
 
+	ep.wsRouter = New()
+
+	api.Register(ep.router, ep.Hub)
+
+	dataSource := fmt.Sprintf("root" + ":" + "111111" + "@" + "tcp(" + "127.0.0.1" + ":" + "3306" + ")/" + "chat" + "?charset=utf8mb4&parseTime=True&loc=Local")
+	db, err := sql.Open("mysql", dataSource)
+	if err != nil {
+		log.Error(err)
+	}
+
+	err = mysql.NewStore(db)
+	if err != nil {
+		log.Error(err)
+	}
+
+	ep.Hub.ChannelManager.Load()
+
 	ep.router.Get("/ws", ep.websocketHandler)
 	return ep
+}
+
+func (ep *Endpoint) websocketHandler(ctx *server.Context) error {
+	resp := ctx.Response()
+	req := ctx.Request()
+
+	fakeID = fakeID + 1 // TODO: fix
+	id := fmt.Sprintf("%d", fakeID)
+	fmt.Println("id:", fakeID)
+
+	ws, err := ep.upgrader.Upgrade(resp, req, nil)
+	if err != nil {
+		log.Error(err)
+		resp.Write([]byte("Upgrade err"))
+		return err
+	}
+
+	c := conn.NewConn(ep.Hub, ws, id)
+	ep.Hub.ConnectionManager.Add(c)
+
+	chans, err := mysql.StoreService.Store().ChannelUser().ChannelsByUserID(id)
+	if err != nil {
+		return err
+	}
+
+	for _, channel := range *chans {
+		single, err := mysql.StoreService.Store().Channel().QueryByID(channel)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+
+
+		err = ep.Hub.ChannelManager.Add(single.Id, c)
+		if err != nil {
+			log.Error(err)
+			return err
+		}
+	}
+
+	c.Start()
+	return nil
 }
 
 func (ep *Endpoint) Serve() error {

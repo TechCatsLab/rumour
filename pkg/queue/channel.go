@@ -8,27 +8,27 @@ package queue
 import (
 	"sync"
 
+	log "github.com/TechCatsLab/logging/logrus"
 	"github.com/TechCatsLab/rumour"
-	"github.com/TechCatsLab/rumour/pkg/log"
 )
 
 type queue struct {
-	queue chan rumour.Message
-	stop sync.Once
+	queue chan *rumour.Message
+	stop  sync.Once
 }
 
 // NewQueue new a queue.
 func NewChannelQueue(size int) rumour.Queue {
-	return &queue {
-		queue: make(chan rumour.Message, size),
+	return &queue{
+		queue: make(chan *rumour.Message, size),
 	}
 }
 
 // Put a message on queue.
-func (q *queue) Put(message rumour.Message) error {
+func (q *queue) Put(message *rumour.Message) error {
 	defer func() {
 		if err := recover(); err != nil {
-			log.Error("[Queue Put] Put message err", log.Err(err.(error)))
+			log.Error(err.(error))
 			// metric
 		}
 	}()
@@ -39,7 +39,7 @@ func (q *queue) Put(message rumour.Message) error {
 }
 
 // Get a message from queue.
-func (q *queue) Get() (rumour.Message, error) {
+func (q *queue) Get() (*rumour.Message, error) {
 	return <-q.queue, nil
 }
 

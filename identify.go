@@ -3,12 +3,10 @@
  *     Initial: 2018/05/30        Tong Yuehong
  */
 
-package identify
+package rumour
 
 import (
 	"errors"
-
-	"github.com/TechCatsLab/rumour"
 )
 
 var ErrInvalidID = errors.New("invalid identify")
@@ -25,7 +23,7 @@ func (identify Identify) Id() (string, error) {
 }
 
 // Equal
-func (identify Identify) Equal(id rumour.Identify) bool {
+func (identify Identify) Equal(id Identify) bool {
 	d, _ := id.Id()
 
 	return identify == Identify(d)

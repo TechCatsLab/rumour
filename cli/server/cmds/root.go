@@ -11,7 +11,7 @@ var rootCmd = &cobra.Command{
 	Use:   "rumour",
 	Short: "A brief description of your application",
 	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application.`,
+           examples and usage of using your application.`,
 }
 
 func Execute() {

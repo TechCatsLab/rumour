@@ -1,10 +1,12 @@
 package cmds
 
 import (
+	_ "github.com/go-sql-driver/mysql"
+
 	"github.com/spf13/cobra"
 
+	log "github.com/TechCatsLab/logging/logrus"
 	"github.com/TechCatsLab/rumour/cli/server/api/server"
-	"github.com/TechCatsLab/rumour/pkg/log"
 )
 
 var startCmd = &cobra.Command{
@@ -14,7 +16,7 @@ var startCmd = &cobra.Command{
 		s := server.CreateWebsocketServer()
 
 		if err := s.Serve(); err != nil {
-			log.Error("[cmds] Start:", log.Err(err))
+			log.Error("[cmds] Start:", err)
 		}
 	},
 }

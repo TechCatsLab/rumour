@@ -3,7 +3,7 @@
  *     Initial: 2018/05/27        Tong Yuehong
  */
 
-package hub
+package core
 
 import (
 	"context"
@@ -11,9 +11,12 @@ import (
 
 	"github.com/TechCatsLab/scheduler"
 
+	log "github.com/TechCatsLab/logging/logrus"
 	"github.com/TechCatsLab/rumour"
-	"github.com/TechCatsLab/rumour/pkg/log"
+	"github.com/TechCatsLab/rumour/message"
+	"github.com/TechCatsLab/rumour/pkg/generator"
 	"github.com/TechCatsLab/rumour/pkg/queue"
+	"github.com/TechCatsLab/rumour/pkg/store/mysql"
 )
 
 const (
@@ -26,20 +29,28 @@ var (
 
 type Hub struct {
 	ConnectionManager *ConnectionManager
-	pool              *scheduler.Pool
+	ChannelManager    *Channels
+
+	store *mysql.StoreServiceProvider
+	pool  *scheduler.Pool
+
 	rumour.Queue
-	shutdown chan struct{}
+	generator *generator.Generator
+	shutdown  chan struct{}
 }
 
 // NewHub - create a new Hub.
 func newHub(c *Config) *Hub {
 	hub := &Hub{
+		ChannelManager:    NewChannelManager(),
 		ConnectionManager: NewConnectionManager(),
 		pool:              scheduler.New(c.DispatcherQueueSize, c.DispatcherWorkers),
 		shutdown:          make(chan struct{}),
 		Queue:             queue.NewChannelQueue(c.IncomingMessageQueueSize),
 	}
 
+	// TODO: Load from configuration or database.
+	hub.generator = generator.New(1000, hub.shutdown)
 	hub.ConnectionManager = NewConnectionManager()
 
 	go hub.start()
@@ -55,7 +66,7 @@ func (h *Hub) start() {
 		}
 
 		if err := h.handleMessage(); err != nil {
-			log.Error("[Hub] handleMessage error", log.Err(err))
+			log.Error(err)
 		}
 	}
 }
@@ -67,32 +78,51 @@ func (h *Hub) handleMessage() error {
 		return err
 	}
 
-	h.Dispatch(msg)
+	switch msg.Type {
+	case message.MessageTypeText:
+		h.Dispatch(msg)
+	case message.MessageTypeChanText:
+		h.ChannelMessage(msg)
+	}
 
 	return nil
 }
 
+//Generator return generator.
+func (h *Hub) Generator() *generator.Generator {
+	return h.generator
+}
+
 // Dispatch a message to the queue.
-func (h *Hub) Put(message rumour.Message) error {
+func (h *Hub) Put(message *rumour.Message) error {
 	h.Queue.Put(message)
 
 	return nil
 }
 
-
-func (hub *Hub) Dispatch(message rumour.Message) error {
-	ctx := context.WithValue(context.Background(), ctxKeyMessage, message)
-
-	return hub.pool.Schedule(scheduler.TaskFunc(hub.dispatch), ctx)
+func (hub *Hub) ChannelMessage(message *rumour.Message) error {
+	return hub.ChannelManager.Dispatch(message)
 }
 
-func (hub *Hub) dispatch(c context.Context) error {
-	message := c.Value(ctxKeyMessage).(rumour.Message)
-	userID := message.Target()
+func (hub *Hub) Dispatch(message *rumour.Message) error {
+	mysql.StoreService.Store().SingleMessage().Insert(
+		message.Content["id"].(uint64),
+		message.From,
+		message.To,
+		uint32(message.Type),
+		message.Content["message"].(string))
+	ctx := context.WithValue(context.Background(), ctxKeyMessage, message)
+
+	return hub.pool.Schedule(ctx, scheduler.TaskFunc(hub.dispatch))
+}
+
+func (hub *Hub) dispatch(ctx context.Context) error {
+	message := ctx.Value(ctxKeyMessage).(*rumour.Message)
+	userID := message.To
 
 	conns, err := hub.ConnectionManager.Query(userID)
 	if err != nil {
-		log.Error("[Dispatcher Dispatch] Query Connection err", log.Err(err))
+		log.Error(err)
 		return err
 	}
 
@@ -104,6 +134,7 @@ func (hub *Hub) dispatch(c context.Context) error {
 		}
 
 		succeed = true
+
 	}
 
 	if succeed {

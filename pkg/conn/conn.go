@@ -6,33 +6,35 @@
 package conn
 
 import (
-	"sync"
 	"errors"
+	"sync"
 
 	"github.com/gorilla/websocket"
 
 	"github.com/TechCatsLab/rumour"
-	"github.com/TechCatsLab/rumour/pkg/log"
+	log "github.com/TechCatsLab/logging/logrus"
 	"github.com/TechCatsLab/rumour/pkg/queue"
-	"github.com/TechCatsLab/rumour/pkg/hub"
-	"github.com/TechCatsLab/rumour/pkg/message"
+	"github.com/TechCatsLab/rumour/pkg/core"
 )
 
 var (
 	ErrDifferentConn = errors.New("different connection")
+	ErrInvalidID     = errors.New("invalid identify")
+	ErrMessageSeq    = errors.New("seq error")
 )
 
 type conn struct {
-	hub      hub.Hub
+	hub      *core.Hub
+	seq      int
 	ws       *websocket.Conn
 	queue    rumour.Queue
-	identify rumour.Identify
+	identify string
 	shutdown chan struct{}
 	stop     sync.Once
 }
 
 //NewConn - create a new Conn.
-func NewConn(hub hub.Hub, ws *websocket.Conn, identify rumour.Identify) rumour.Connection {
+func NewConn(hub *core.Hub, ws *websocket.Conn, identify string) rumour.Connection {
 	conn := &conn{
 		ws:       ws,
 		hub:      hub,
@@ -52,6 +54,9 @@ func (c *conn) Start() {
 func (c *conn) readLoop() {
 	for {
 		if err := c.handleRead(); err != nil {
+			if err == ErrMessageSeq {
+				continue
+			}
 			c.Stop()
 			break
 		}
@@ -82,68 +87,92 @@ func (c *conn) writeLoop() {
 func (c *conn) handleRead() error {
 	msg, err := c.receive()
 	if err != nil {
-		log.Error("[Connection handleRead] HandleRead err:", log.Err(err))
+		log.Error(err)
 		c.Stop()
 		return err
 	}
 
-	if !c.identify.Equal(msg.Source()) {
+	if c.identify != (msg.From) {
 		log.Error("[conn handleRead] different connection")
 		return ErrDifferentConn
 	}
 
-	return c.hub.Put(msg)
+	id := c.hub.Generator().Get()
+	msg.Content["id"] = id
+
+	err = c.hub.Put(msg)
+	if err != nil {
+		return nil
+	}
+
+	ack := &rumour.Message{
+		Seq:     msg.Seq,
+		Type:    0,
+		Content: make(map[string]interface{}),
+	}
+
+	ack.Content["id"] = id
+	return c.Send(ack)
 }
 
 func (c *conn) handleWrite() error {
 	msg, err := c.queue.Get()
 	if err != nil {
-		log.Error("[Connection handleWrite] HandleWrite err:", log.Err(err))
+		log.Error(err)
 		return err
 	}
 
 	return c.ws.WriteJSON(msg)
 }
 
-// Identify return the identify.
-func (c *conn) Identify() rumour.Identify {
-	return c.identify
-}
-
 // Receive message which is sent by client.
-func (c *conn) receive() (rumour.Message, error) {
+func (c *conn) receive() (*rumour.Message, error) {
 	_, b, err := c.ws.ReadMessage()
 	if err != nil {
-		log.Error("[Connection Receive]Can't read from webSocket", log.Err(err))
+		log.Error(err)
 		return nil, err
 	}
 
 	msg, err := c.parse(b)
 	if err != nil {
-		log.Error("[Connection] Parse err", log.Err(err))
+		log.Error(err)
 		return nil, err
 	}
+
+	if msg.Seq <= c.seq {
+		return nil, ErrMessageSeq
+	}
+
+	c.seq = msg.Seq
 
 	return msg, nil
 }
 
-func (c *conn) parse(data []byte) (rumour.Message, error) {
-	var m message.Message
+func (c *conn) parse(data []byte) (*rumour.Message, error) {
+	var m rumour.Message
 
 	err := m.Unmarshal(data)
 	if err != nil {
 		return nil, err
 	}
 
-	if m.From =="" || m.To == "" || m.Type == 0 {
+	if m.From == "" || m.To == "" || m.Type == 0 {
 		return nil, errors.New("param err")
 	}
 
 	return &m, nil
 }
 
-// Send a message to the client.
-func (c *conn) Send(message rumour.Message) error {
+// Identify return the id.
+func (c *conn) Identify() (string, error) {
+	if c.identify == "" {
+		return "", ErrInvalidID
+	}
+	return c.identify, nil
+}
+
+// Send a message to the queue saved message which is sent to client.
+func (c *conn) Send(message *rumour.Message) error {
 	return c.queue.Put(message)
 }
 

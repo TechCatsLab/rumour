@@ -6,6 +6,7 @@
 package message
 
 const (
-	// MessageTypePlainText - Plain text message
-	MessageTypePlainText = 0x0100
+	MessageTypeText = 0x0100
+
+	MessageTypeChanText= 0x0200
 )

@@ -9,30 +9,14 @@ package rumour
 type Connection interface {
 	Start()
 	Stop()
-	Identify() Identify
-	Send(Message) error
+	Identify() (string, error)
+	Send(*Message) error
 }
 
-// Queue -
 type Queue interface {
-	Put(Message) error
-	Get() (Message, error)
+	Put(*Message) error
+	Get() (*Message, error)
 	Close()
-}
-
-// Message -
-type Message interface {
-	Source() Identify
-	Target() Identify
-	MessageType() interface{}
-	Marshal() ([]byte, error)
-	Unmarshal([]byte) error
-}
-
-// Identify -
-type Identify interface {
-	Equal(Identify) bool
-	Id() (string, error)
 }
 
 // Authenticator -

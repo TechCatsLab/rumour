@@ -3,14 +3,14 @@
  *     Initial: 2018/05/31        Tong Yuehong
  */
 
-package hub
+package core
 
 import (
-	"sync"
 	"errors"
+	"sync"
 
+	log "github.com/TechCatsLab/logging/logrus"
 	"github.com/TechCatsLab/rumour"
-	"github.com/TechCatsLab/rumour/pkg/log"
 )
 
 var ErrConnNotExist = errors.New("connection not exists")
@@ -21,7 +21,7 @@ type ConnectionManager struct {
 }
 
 // NewManager create a new connection manager.
-func NewConnectionManager() *ConnectionManager{
+func NewConnectionManager() *ConnectionManager {
 	return &ConnectionManager{
 		conns: make(map[string][]rumour.Connection),
 	}
@@ -32,9 +32,9 @@ func (m *ConnectionManager) Add(connection rumour.Connection) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	userID, err := connection.Identify().Id()
+	userID, err := connection.Identify()
 	if err != nil {
-		log.Warn("[Manager Add] Add to manager err", log.Err(err))
+		log.Warn(err)
 		connection.Stop()
 		return nil
 	}
@@ -42,7 +42,6 @@ func (m *ConnectionManager) Add(connection rumour.Connection) error {
 	if _, exists := m.conns[userID]; !exists {
 		m.conns[userID] = []rumour.Connection{}
 	}
-
 	m.conns[userID] = append(m.conns[userID], connection)
 
 	return nil
@@ -53,7 +52,7 @@ func (m *ConnectionManager) Remove(connection rumour.Connection) error {
 	m.mux.Lock()
 	defer m.mux.Unlock()
 
-	userID, err := connection.Identify().Id()
+	userID, err := connection.Identify()
 	if err != nil {
 		connection.Stop()
 		return nil
@@ -68,6 +67,7 @@ func (m *ConnectionManager) Remove(connection rumour.Connection) error {
 	for i, v := range conns {
 		if v == connection {
 			conns = append(conns[:i], conns[i+1:]...)
+			break
 		}
 	}
 
@@ -76,17 +76,11 @@ func (m *ConnectionManager) Remove(connection rumour.Connection) error {
 }
 
 // Query someone's connection.
-func (m *ConnectionManager) Query(id rumour.Identify) ([]rumour.Connection, error) {
+func (m *ConnectionManager) Query(id string) ([]rumour.Connection, error) {
 	m.mux.RLock()
 	defer m.mux.RUnlock()
 
-	userID, err := id.Id()
-	if err != nil {
-		log.Error("[Manager Query] Query Connection err", log.Err(err))
-		return nil, err
-	}
-
-	conns, exists := m.conns[userID]
+	conns, exists := m.conns[id]
 	if !exists {
 		log.Error("[Manager Query] Connection not exists")
 		return nil, ErrConnNotExist

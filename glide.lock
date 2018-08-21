@@ -1,5 +1,5 @@
-hash: 5d418c0a82f50279e49f8816e8dcc2c347afeae6e164649f24b57857b2f2e875
-updated: 2018-07-19T19:32:01.466201+08:00
+hash: 6de4ce38d971d6b00a651d9b5c56abbd2146b3fd127368a4e34b27a9123c3969
+updated: 2018-08-13T10:51:27.964872+08:00
 imports:
 - name: github.com/dgrijalva/jwt-go
   version: 06ea1031745cb8b3dab3f6a236daf2b0aa468b7e
@@ -14,7 +14,7 @@ imports:
 - name: github.com/gorilla/context
   version: 08b5f424b9271eedf6f9f0ce86cb9396ed337a42
 - name: github.com/gorilla/mux
-  version: cb4698366aa625048f3b815af6a0dea8aef9280a
+  version: e48e440e4c92e3251d812f8ce7858944dfa3331c
 - name: github.com/gorilla/websocket
   version: 5ed622c449da6d44c3c8329331ff47a9e5844f71
 - name: github.com/hashicorp/hcl
@@ -32,7 +32,7 @@ imports:
 - name: github.com/inconshreveable/mousetrap
   version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
 - name: github.com/json-iterator/go
-  version: ab8a2e0c74be9d3be70b3184d9acc634935ded82
+  version: 1624edc4454b8682399def8740d46db5e4362ba4
 - name: github.com/magiconair/properties
   version: c2353362d570a7bfa228149c62842019201cfb71
 - name: github.com/mitchellh/mapstructure
@@ -42,7 +42,7 @@ imports:
 - name: github.com/modern-go/reflect2
   version: 94122c33edd36123c84d5368cfb2b69df93a0ec8
 - name: github.com/pelletier/go-toml
-  version: 5c5490133daa8660ec676ca8b096cc27e223beaa
+  version: c2dbbc24a97911339e01bda0b8cabdbd8f13b602
 - name: github.com/spf13/afero
   version: 787d034dfe70e44075ccc060d346146ef53270ad
   subpackages:
@@ -50,19 +50,21 @@ imports:
 - name: github.com/spf13/cast
   version: 8965335b8c7107321228e3e3702cab9832751bac
 - name: github.com/spf13/cobra
-  version: a114f312e075f65bf30d6d9a1430113f857e543b
+  version: 7c4570c3ebeb8129a1f7456d0908a8b676b6f9f1
 - name: github.com/spf13/jwalterweatherman
   version: 7c0cea34c8ece3fbeb2b27ab9b59511d360fb394
 - name: github.com/spf13/pflag
-  version: 3ebe029320b2676d667ae88da602a5f854788a8a
+  version: 9a97c102cda95a86cec2345a6f09f55a939babf5
 - name: github.com/spf13/viper
-  version: d493c32b69b8c6f2377bf30bc4d70267ffbc0793
+  version: 907c19d40d9a6c9bb55f040ff4ae45271a4754b9
 - name: github.com/TechCatsLab/apix
   version: a001e212027db82d53bec6058756798e7306ab4a
   subpackages:
   - http/server
+- name: github.com/TechCatsLab/logging
+  version: 901337472673b669ef4be26100c395424c7fa75a
 - name: github.com/TechCatsLab/scheduler
-  version: 49ffa1ba65a762b90e0ef2a1dcb1bbdc94544dec
+  version: 4c2706707d13717c11a11a6d9122d256501ea3b4
 - name: github.com/urfave/negroni
   version: 5dbbc83f748fc3ad38585842b0aedab546d0ea1e
 - name: go.uber.org/atomic
@@ -70,7 +72,7 @@ imports:
 - name: go.uber.org/multierr
   version: 3c4937480c32f4c13a875a1829af76c98ca3d40a
 - name: go.uber.org/zap
-  version: eeedf312bc6c57391d84767a4cd413f02a917974
+  version: ff33455a0e382e8a81d14dd7c922020b6b5e7982
   subpackages:
   - buffer
   - internal/bufferpool
@@ -78,11 +80,11 @@ imports:
   - internal/exit
   - zapcore
 - name: golang.org/x/sys
-  version: ac767d655b305d4e9612f5f6e33120b9176c4ad4
+  version: 98c5dad5d1a0e8a73845ecc8897d0bd56586511d
   subpackages:
   - unix
 - name: golang.org/x/text
-  version: 0605a8320aceb4207a5fb3521281e17ec2075476
+  version: 6e3c4e7365ddcc329f090f96e4348398f6310088
   subpackages:
   - transform
   - unicode/norm

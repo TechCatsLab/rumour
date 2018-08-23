@@ -11,3 +11,7 @@ import:
 - package: github.com/TechCatsLab/apix
 - package: github.com/TechCatsLab/scheduler
 - package: github.com/TechCatsLab/logging
+- package: github.com/spf13/cobra
+  repo:    git@github.com:spf13/cobra.git
+- package: github.com/spf13/viper
+  repo:    git@github.com:spf13/viper.git

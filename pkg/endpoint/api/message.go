@@ -71,24 +71,35 @@ func (a *API) GetRecord(c *server.Context) error {
 	return response.WriteStatusAndDataJSON(c, constants.ErrSucceed, messages)
 }
 
-func (a *API) GetChannelUnRead(this *server.Context) error {
+func (a *API) GetChannelUnRead(c *server.Context) error {
 	var (
 		info struct {
 			ChanID uint32 `json:"chan_id"`
 			MsgID  uint64 `json:"msg_id"`
+			UserID string `json:"user_id"`
 		}
 	)
 
-	if err := this.JSONBody(&info); err != nil {
+	if err := c.JSONBody(&info); err != nil {
 		log.Error(err)
-		return response.WriteStatusAndDataJSON(this, constants.ErrInvalidParam, nil)
+		return response.WriteStatusAndDataJSON(c, constants.ErrInvalidParam, nil)
+	}
+
+	if info.MsgID == 0 {
+		lastMsgID,err := mysql.StoreService.Store().ChannelUser().UnreadMsgID(info.ChanID, info.UserID)
+		if err != nil {
+			log.Error(err)
+			return response.WriteStatusAndDataJSON(c, constants.ErrMysql, nil)
+		}
+
+		info.MsgID = lastMsgID
 	}
 
 	messages, err := mysql.StoreService.Store().ChannelMessage().Unread(info.ChanID, info.MsgID)
 	if err != nil {
 		log.Error(err)
-		return response.WriteStatusAndDataJSON(this, constants.ErrMysql, nil)
+		return response.WriteStatusAndDataJSON(c, constants.ErrMysql, nil)
 	}
 
-	return response.WriteStatusAndDataJSON(this, constants.ErrSucceed, messages)
+	return response.WriteStatusAndDataJSON(c, constants.ErrSucceed, messages)
 }

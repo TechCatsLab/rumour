@@ -14,6 +14,51 @@ import (
 	"github.com/TechCatsLab/rumour/pkg/store/mysql"
 )
 
+// Insert a channel.
+func (a *API) Insert(c *server.Context) error {
+	var (
+		info struct {
+			Name string `json:"name"`
+			Title string `json:"title"`
+		}
+	)
+
+	if err := c.JSONBody(&info); err != nil {
+		log.Error(err)
+		return response.WriteStatusAndDataJSON(c, constants.ErrInvalidParam, nil)
+	}
+
+	id, err := mysql.StoreService.Store().Channel().Insert(info.Name, info.Title)
+	if err != nil {
+		log.Error(err)
+		return response.WriteStatusAndDataJSON(c, constants.ErrMysql, nil)
+	}
+
+	return response.WriteStatusAndIDJSON(c, constants.ErrSucceed, id)
+}
+
+// Disable represents that a channel is deleted.
+func (a *API) Disable(c *server.Context) error {
+	var (
+		info struct {
+			ID uint32 `json:"id"`
+		}
+	)
+
+	if err := c.JSONBody(&info); err != nil {
+		log.Error(err)
+		return response.WriteStatusAndDataJSON(c, constants.ErrInvalidParam, nil)
+	}
+
+	err := mysql.StoreService.Store().Channel().Disable(info.ID)
+	if err != nil {
+		log.Error(err)
+		return response.WriteStatusAndDataJSON(c, constants.ErrMysql, nil)
+	}
+
+	return response.WriteStatusAndDataJSON(c, constants.ErrSucceed, nil)
+}
+
 // GetMembers get members of a channel by channelID.
 func (a *API) GetMembers(c *server.Context) error {
 	var (

@@ -30,7 +30,7 @@ const (
 	sqlChannelUserUnread
 	sqlChannelUserChannels
 	sqlChannelUserMembers
-	sqlChannelUserlDisable
+	sqlChannelUserDisable
 )
 
 var (
@@ -180,7 +180,7 @@ func (cu *channelUserServiceProvider) MemberByChanID(channelID uint32) ([]*chann
 }
 
 func (cu *channelUserServiceProvider) Remove(channelID uint32) error {
-	result, err := cu.store.db.Exec(sqlChannelUser[sqlChannelUserlDisable], channelID)
+	result, err := cu.store.db.Exec(sqlChannelUser[sqlChannelUserDisable], channelID)
 	if err != nil {
 		return err
 	}

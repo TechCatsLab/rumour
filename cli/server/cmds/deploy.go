@@ -5,66 +5,79 @@
 package cmds
 
 import (
-	"database/sql"
 	"fmt"
+	"os"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/spf13/cobra"
+	"github.com/spf13/viper"
 
 	log "github.com/TechCatsLab/logging/logrus"
-	"github.com/TechCatsLab/rumour/pkg/store/mysql"
+	"github.com/TechCatsLab/rumour/cli/server/api/server"
 )
 
 var (
-	host string
-	port string
+	cfgFile string
 	user string
 	pass string
+	host string
+	port string
 )
 
 var deployCmd = &cobra.Command{
 	Use:   "deploy",
 	Short: "database init",
 	Run: func(cmd *cobra.Command, args []string) {
-		dataSource := fmt.Sprintf(user + ":" + pass + "@" + "tcp(" + host + ":" + port + ")/" + "chat" + "?charset=utf8&parseTime=True&loc=Local")
-		db, err := sql.Open("mysql", dataSource)
-		if err != nil {
-			log.Error(err)
+		c := &server.Config {
+			User : user,
+			Pass: pass,
+			Host: host,
+			Port: port,
 		}
 
-		err = mysql.NewStore(db)
+		db, err  := c.OpenDB()
 		if err != nil {
 			log.Error(err)
+			return
 		}
 
-		err = mysql.StoreService.Store().Channel().Create()
+		err = server.OpenStore(db)
 		if err != nil {
 			log.Error(err)
+			return
 		}
 
-		err = mysql.StoreService.Store().ChannelUser().Create()
+		err = server.CreateTable()
 		if err != nil {
 			log.Error(err)
+			return
 		}
-
-		err = mysql.StoreService.Store().SingleMessage().Create()
-		if err != nil {
-			log.Error(err)
-		}
-
-		err = mysql.StoreService.Store().ChannelMessage().Create()
-		if err != nil {
-			log.Error(err)
-		}
-
 	},
 }
 
 func init() {
+	cobra.OnInitialize(initConfig)
 	rootCmd.AddCommand(deployCmd)
 
-	deployCmd.Flags().StringVarP(&host, "host", "t", "", "host address")
-	deployCmd.Flags().StringVarP(&port, "port", "p", "", "port")
-	deployCmd.Flags().StringVarP(&user, "user", "u", "", "user")
-	deployCmd.Flags().StringVarP(&pass, "pass", "s", "", "pass")
+	deployCmd.Flags().StringVar(&cfgFile, "config", "", "mysql config file")
+}
+
+func initConfig() {
+	if cfgFile != "" {
+		viper.SetConfigFile(cfgFile)
+	}
+
+	viper.AddConfigPath(cfgFile)
+	viper.SetConfigName("config")
+	viper.AutomaticEnv()
+
+	if err := viper.ReadInConfig(); err != nil {
+		fmt.Println("Can't read config:", err)
+		os.Exit(1)
+	}
+
+	user = viper.GetString("mysql.user")
+	pass = viper.GetString("mysql.pass")
+	host = viper.GetString("mysql.host")
+	port = viper.GetString("mysql.port")
 }

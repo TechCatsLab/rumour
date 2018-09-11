@@ -11,10 +11,10 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"github.com/TechCatsLab/rumour"
 	log "github.com/TechCatsLab/logging/logrus"
-	"github.com/TechCatsLab/rumour/pkg/queue"
+	"github.com/TechCatsLab/rumour"
 	"github.com/TechCatsLab/rumour/pkg/core"
+	"github.com/TechCatsLab/rumour/pkg/queue"
 )
 
 var (
@@ -87,8 +87,8 @@ func (c *conn) writeLoop() {
 func (c *conn) handleRead() error {
 	msg, err := c.receive()
 	if err != nil {
-		log.Error(err)
 		c.Stop()
+		log.Error(err)
 		return err
 	}
 

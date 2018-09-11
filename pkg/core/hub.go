@@ -27,6 +27,7 @@ var (
 	ErrDispatch = errors.New("Can't dispatch the message.")
 )
 
+// Hub represents a core.
 type Hub struct {
 	ConnectionManager *ConnectionManager
 	ChannelManager    *Channels
@@ -71,7 +72,6 @@ func (h *Hub) start() {
 	}
 }
 
-//
 func (h *Hub) handleMessage() error {
 	msg, err := h.Queue.Get()
 	if err != nil {
@@ -95,15 +95,32 @@ func (h *Hub) Generator() *generator.Generator {
 
 // Dispatch a message to the queue.
 func (h *Hub) Put(message *rumour.Message) error {
-	h.Queue.Put(message)
+	return h.Queue.Put(message)
+}
+
+// JoinChannel add connections to the channel.
+func (hub *Hub) JoinChannel(userID string, chanID uint32) error {
+	conns, err := hub.ConnectionManager.Query(userID)
+	if err != nil {
+		return err
+	}
+
+	for _, conn := range conns {
+		err := hub.ChannelManager.Add(chanID, conn)
+		if err != nil {
+			return err
+		}
+	}
 
 	return nil
 }
 
+// ChannelMessage dispatch channel message.
 func (hub *Hub) ChannelMessage(message *rumour.Message) error {
 	return hub.ChannelManager.Dispatch(message)
 }
 
+// Dispatch dispatch the single message.
 func (hub *Hub) Dispatch(message *rumour.Message) error {
 	mysql.StoreService.Store().SingleMessage().Insert(
 		message.Content["id"].(uint64),

@@ -59,7 +59,6 @@ func (m *ConnectionManager) Remove(connection rumour.Connection) error {
 	}
 
 	conns, exists := m.conns[userID]
-
 	if !exists {
 		return nil
 	}

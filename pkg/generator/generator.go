@@ -33,6 +33,7 @@ func (g *Generator) generate(shutdown chan struct{}) {
 	}
 }
 
+// Get a id from generator.
 func (g *Generator) Get() uint64 {
 	return <-g.generator
 }

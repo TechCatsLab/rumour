@@ -8,6 +8,7 @@ package mysql
 import (
 	"strconv"
 	"time"
+	"errors"
 )
 
 type (
@@ -54,6 +55,10 @@ var (
 	}
 )
 
+var (
+	errInvalidSMInsert = errors.New("insert single_message: insert single message affected 0 row")
+)
+
 // Create single_message table.
 func (sm *singleMessageServiceProvider) Create() error {
 	_, err := sm.store.db.Exec(sqlSingle_Message[sqlSingleMessageCreateTable])
@@ -78,7 +83,7 @@ func (sm *singleMessageServiceProvider) Insert(id uint64, from, to string, kind 
 	}
 
 	if affected, _ := result.RowsAffected(); affected == 0 {
-		return 0, errInvalidInsert
+		return 0, errInvalidSMInsert
 	}
 
 	ID, err := result.LastInsertId()

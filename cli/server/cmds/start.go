@@ -1,7 +1,6 @@
 package cmds
 
 import (
-	"fmt"
 	"os"
 
 	_ "github.com/go-sql-driver/mysql"
@@ -16,7 +15,6 @@ var startCmd = &cobra.Command{
 	Use:   "start",
 	Short: "Start communication server",
 	Run: func(cmd *cobra.Command, args []string) {
-		s := server.CreateWebsocketServer()
 		c := &server.Config{
 			User: user,
 			Pass: pass,
@@ -30,11 +28,13 @@ var startCmd = &cobra.Command{
 			return
 		}
 
+
 		err = server.OpenStore(db)
 		if err != nil {
 			return
 		}
 
+		s := server.CreateWebsocketServer()
 		if err := s.Serve(); err != nil {
 			log.Error("[cmds] Start:", err)
 		}
@@ -58,7 +58,7 @@ func mysqlConfig() {
 	viper.AutomaticEnv()
 
 	if err := viper.ReadInConfig(); err != nil {
-		fmt.Println("Can't read config:", err)
+		log.Error("Can't read config:", err)
 		os.Exit(1)
 	}
 

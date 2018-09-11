@@ -68,6 +68,11 @@ func newStore(db *sql.DB) (*store, error) {
 	return s, nil
 }
 
+// DB returns database.
+func (s *store) DB() *sql.DB {
+	return s.db
+}
+
 // Channel returns channelServiceProvider.
 func (s *store) Channel() *channelServiceProvider {
 	return s.channel

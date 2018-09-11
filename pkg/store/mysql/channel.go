@@ -8,6 +8,8 @@ package mysql
 import (
 	"time"
 	"errors"
+	"database/sql"
+	"context"
 )
 
 type (
@@ -35,11 +37,6 @@ const (
 )
 
 var (
-	errInvalidInsert = errors.New("store Channel: insert affected 0 rows")
-	errInvalidDisable = errors.New("disable Channel: disable affected 0 rows")
-)
-
-var (
 	sqlChannel = []string{
 		`CREATE TABLE IF NOT EXISTS chat.channels (
 			id 			INTEGER UNSIGNED NOT NULL AUTO_INCREMENT,
@@ -58,6 +55,12 @@ var (
 	}
 )
 
+var (
+	errInvalidChannelInsert = errors.New("insert Channel: insert affected 0 rows")
+	errInvalidChannelDisable = errors.New("disable Channel: disable affected 0 rows")
+	errInvalidChannelOwner = errors.New("disable Channel: not the owner")
+)
+
 // Create channels table.
 func (c *channelServiceProvider) Create() error {
 	_, err := c.store.db.Exec(sqlChannel[sqlChannelCreateTable])
@@ -74,7 +77,7 @@ func (c *channelServiceProvider) Insert(name, title string) (uint32, error) {
 	}
 
 	if affected, _ := result.RowsAffected(); affected == 0 {
-		return 0, errInvalidInsert
+		return 0, errInvalidChannelInsert
 	}
 
 	id, err := result.LastInsertId()
@@ -86,14 +89,37 @@ func (c *channelServiceProvider) Insert(name, title string) (uint32, error) {
 }
 
 // Disable represent delete a Channel.
-func (c *channelServiceProvider) Disable(channelID uint32) error {
-	result, err := c.store.db.Exec(sqlChannel[sqlChannelDisable], channelID)
+func (c *channelServiceProvider) Disable(channelID uint32, userID string) (err error) {
+	role, err := c.store.channelUser.GetRole(channelID, userID)
+	if role != channelOwner {
+		return errInvalidChannelOwner
+	}
+
+	tx, err := c.store.db.BeginTx(context.Background(), &sql.TxOptions{})
+	defer func() {
+		if err != nil {
+			err = tx.Rollback()
+		} else {
+			err = tx.Commit()
+		}
+	}()
+
+	result, err := tx.Exec(sqlChannel[sqlChannelDisable], channelID)
 	if err != nil {
 		return err
 	}
 
 	if affected, _ := result.RowsAffected(); affected == 0 {
-		return errInvalidDisable
+		return errInvalidChannelDisable
+	}
+
+	remove, err := tx.Exec(sqlChannelUser[sqlChannelUserDisable], channelID)
+	if err != nil {
+		return err
+	}
+
+	if affected, _ := remove.RowsAffected(); affected == 0 {
+		return errInvalidCUDisable
 	}
 
 	return nil

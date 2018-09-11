@@ -14,21 +14,21 @@ import (
 	"github.com/TechCatsLab/rumour/pkg/store/mysql"
 )
 
-// Insert a channel.
-func (a *API) Insert(c *server.Context) error {
+// Create a channel.
+func (a *API) CreateChannel(c *server.Context) error {
 	var (
-		info struct {
+		req struct {
 			Name string `json:"name"`
 			Title string `json:"title"`
 		}
 	)
 
-	if err := c.JSONBody(&info); err != nil {
+	if err := c.JSONBody(&req); err != nil {
 		log.Error(err)
 		return response.WriteStatusAndDataJSON(c, constants.ErrInvalidParam, nil)
 	}
 
-	id, err := mysql.StoreService.Store().Channel().Insert(info.Name, info.Title)
+	id, err := mysql.StoreService.Store().Channel().Insert(req.Name, req.Title)
 	if err != nil {
 		log.Error(err)
 		return response.WriteStatusAndDataJSON(c, constants.ErrMysql, nil)
@@ -38,19 +38,20 @@ func (a *API) Insert(c *server.Context) error {
 }
 
 // Disable represents that a channel is deleted.
-func (a *API) Disable(c *server.Context) error {
+func (a *API) DisableChannel(c *server.Context) error {
 	var (
-		info struct {
-			ID uint32 `json:"id"`
+		req struct {
+			UserID string `json:"user_id"`
+			ChanID uint32 `json:"chan_id"`
 		}
 	)
 
-	if err := c.JSONBody(&info); err != nil {
+	if err := c.JSONBody(&req); err != nil {
 		log.Error(err)
 		return response.WriteStatusAndDataJSON(c, constants.ErrInvalidParam, nil)
 	}
 
-	err := mysql.StoreService.Store().Channel().Disable(info.ID)
+	err := mysql.StoreService.Store().Channel().Disable(req.ChanID, req.UserID)
 	if err != nil {
 		log.Error(err)
 		return response.WriteStatusAndDataJSON(c, constants.ErrMysql, nil)
@@ -59,20 +60,20 @@ func (a *API) Disable(c *server.Context) error {
 	return response.WriteStatusAndDataJSON(c, constants.ErrSucceed, nil)
 }
 
-// GetMembers get members of a channel by channelID.
-func (a *API) GetMembers(c *server.Context) error {
+// ListMembers get members of a channel by channelID.
+func (a *API) ListMembers(c *server.Context) error {
 	var (
-		info struct {
+		req struct {
 			ChanID uint32 `json:"chan_id"`
 		}
 	)
 
-	if err := c.JSONBody(&info); err != nil {
+	if err := c.JSONBody(&req); err != nil {
 		log.Error(err)
 		return response.WriteStatusAndDataJSON(c, constants.ErrInvalidParam, nil)
 	}
 
-	members, err := mysql.StoreService.Store().ChannelUser().MemberByChanID(info.ChanID)
+	members, err := mysql.StoreService.Store().ChannelUser().MemberByChanID(req.ChanID)
 	if err != nil {
 		log.Error(err)
 		return response.WriteStatusAndDataJSON(c, constants.ErrMysql, nil)
@@ -81,20 +82,20 @@ func (a *API) GetMembers(c *server.Context) error {
 	return response.WriteStatusAndDataJSON(c, constants.ErrSucceed, members)
 }
 
-// GetChannels get channels which the user joined by userID.
-func (a *API) GetChannels(c *server.Context) error {
+// ListChannels get channels which the user joined by userID.
+func (a *API) ListChannels(c *server.Context) error {
 	var (
-		info struct {
+		req struct {
 			UserID string `json:"user_id"`
 		}
 	)
 
-	if err := c.JSONBody(&info); err != nil {
+	if err := c.JSONBody(&req); err != nil {
 		log.Error(err)
 		return response.WriteStatusAndDataJSON(c, constants.ErrInvalidParam, nil)
 	}
 
-	channels, err := mysql.StoreService.Store().ChannelUser().ChannelsByUserID(info.UserID)
+	channels, err := mysql.StoreService.Store().ChannelUser().ChannelsByUserID(req.UserID)
 	if err != nil {
 		log.Error(err)
 		return response.WriteStatusAndDataJSON(c, constants.ErrMysql, nil)

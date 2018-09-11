@@ -27,10 +27,13 @@ func Register(r *server.Router, h *core.Hub) {
 
 	a := NewAPI(h)
 
-	r.Post("/api/v1/single/unread", a.GetUnReadMessage)
-	r.Post("/api/v1/single/history", a.GetRecord)
+	r.Post("/api/v1/single/unread", a.FetchUnreadMessages)
+	r.Post("/api/v1/single/history", a.ListHistoryMessages)
 
-	r.Post("/api/v1/channel/joined", a.GetChannels)
-	r.Post("/api/v1/channel/members", a.GetMembers)
-	r.Post("/api/v1/channel/unread", a.GetChannelUnRead)
+	r.Post("/api/v1/channel/joined", a.ListChannels)
+	r.Post("/api/v1/channel/members", a.ListMembers)
+	r.Post("/api/v1/channel/unread", a.ListChannelUnRead)
+	r.Post("/api/v1/channel/join", a.JoinChannel)
+	r.Post("/api/v1/channel/exit", a.DisableChannel)
+	r.Post("/api/v1/channel/role", a.ChangeRole)
 }

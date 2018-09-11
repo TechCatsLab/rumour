@@ -6,8 +6,8 @@
 package server
 
 import (
-	"database/sql"
 	"fmt"
+	"database/sql"
 
 	log "github.com/TechCatsLab/logging/logrus"
 )
@@ -27,5 +27,6 @@ func (c *Config) OpenDB() (*sql.DB, error) {
 		log.Error(err)
 		return nil, err
 	}
+
 	return db, nil
 }

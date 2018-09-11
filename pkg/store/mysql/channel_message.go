@@ -8,6 +8,7 @@ package mysql
 import (
 	"strconv"
 	"time"
+	"errors"
 )
 
 type (
@@ -48,6 +49,10 @@ var (
 	}
 )
 
+var (
+	errInvalidCMInsert = errors.New("insert channel_message: insert affected 0 rows")
+)
+
 // Create table channel_message.
 func (cm *channelMessageServiceProvider) Create() error {
 	_, err := cm.store.db.Exec(sqlChannel_Message[sqlChannelMessageCreateTable])
@@ -73,7 +78,7 @@ func (cm *channelMessageServiceProvider) Insert(id uint64, from, to string, kind
 	}
 
 	if affected, _ := result.RowsAffected(); affected == 0 {
-		return 0, errInvalidInsert
+		return 0, errInvalidCMInsert
 	}
 
 	ID, err := result.LastInsertId()

@@ -20,6 +20,7 @@ var (
 	ErrChannelNotExist = errors.New("channel manager: channel not exists")
 )
 
+// Channels represents a channel manager.
 type Channels struct {
 	muCh     sync.RWMutex
 	channels map[uint32]*Channel
@@ -79,21 +80,10 @@ func (chans *Channels) Remove(chanID uint32) error {
 	delete(chans.channels, chanID)
 	chans.muCh.Unlock()
 
-	// TODO: Tx
-	err := mysql.StoreService.Store().Channel().Disable(chanID)
-	if err != nil {
-		return err
-	}
-
-	err = mysql.StoreService.Store().ChannelUser().Remove(chanID)
-	if err != nil {
-		return err
-	}
-
 	return nil
 }
 
-// Query
+// Query a channel by channelID.
 func (chans *Channels) Query(id string) (*Channel, error) {
 	chanID, err := strconv.ParseUint(id, 10, 32)
 	if err != nil {
@@ -111,6 +101,7 @@ func (chans *Channels) Query(id string) (*Channel, error) {
 	return channel, nil
 }
 
+// Dispatch message.
 func (chans *Channels) Dispatch(message *rumour.Message) error {
 	_, err := mysql.StoreService.Store().ChannelMessage().Insert(
 		message.Content["id"].(uint64),

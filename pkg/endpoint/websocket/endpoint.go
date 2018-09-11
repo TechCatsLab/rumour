@@ -7,7 +7,6 @@ package websocket
 
 import (
 	"fmt"
-	"database/sql"
 	"net/http"
 	_ "github.com/go-sql-driver/mysql"
 
@@ -30,7 +29,6 @@ type Endpoint struct {
 	Hub      *core.Hub
 	server   *server.Entrypoint
 	router   *server.Router
-	wsRouter *WebSocketRouter
 	upgrader *websocket.Upgrader
 }
 
@@ -55,20 +53,7 @@ func NewEndpoint(hub *core.Hub) rumour.Endpoint {
 		},
 	}
 
-	ep.wsRouter = New()
-
 	api.Register(ep.router, ep.Hub)
-
-	dataSource := fmt.Sprintf("root" + ":" + "111111" + "@" + "tcp(" + "127.0.0.1" + ":" + "3306" + ")/" + "chat" + "?charset=utf8mb4&parseTime=True&loc=Local")
-	db, err := sql.Open("mysql", dataSource)
-	if err != nil {
-		log.Error(err)
-	}
-
-	err = mysql.NewStore(db)
-	if err != nil {
-		log.Error(err)
-	}
 
 	ep.Hub.ChannelManager.Load()
 
@@ -82,7 +67,6 @@ func (ep *Endpoint) websocketHandler(ctx *server.Context) error {
 
 	fakeID = fakeID + 1 // TODO: fix
 	id := fmt.Sprintf("%d", fakeID)
-	fmt.Println("id:", fakeID)
 
 	ws, err := ep.upgrader.Upgrade(resp, req, nil)
 	if err != nil {
@@ -99,18 +83,19 @@ func (ep *Endpoint) websocketHandler(ctx *server.Context) error {
 		return err
 	}
 
-	for _, channel := range *chans {
-		single, err := mysql.StoreService.Store().Channel().QueryByID(channel)
-		if err != nil {
-			log.Error(err)
-			return err
-		}
+	if chans != nil {
+		for _, channel := range *chans {
+			single, err := mysql.StoreService.Store().Channel().QueryByID(channel)
+			if err != nil {
+				log.Error(err)
+				return err
+			}
 
-
-		err = ep.Hub.ChannelManager.Add(single.Id, c)
-		if err != nil {
-			log.Error(err)
-			return err
+			err = ep.Hub.ChannelManager.Add(single.Id, c)
+			if err != nil {
+				log.Error(err)
+				return err
+			}
 		}
 	}
 

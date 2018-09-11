@@ -5,6 +5,7 @@
 
 package core
 
+// Config represents the configure when new a hub.
 type Config struct {
 	IncomingMessageQueueSize int
 
@@ -12,6 +13,7 @@ type Config struct {
 	DispatcherWorkers   int
 }
 
+// NewConfig ensure the configure.
 func NewConfig(fn ...func(*Config)) *Config {
 	c := &Config{}
 
@@ -22,6 +24,7 @@ func NewConfig(fn ...func(*Config)) *Config {
 	return c
 }
 
+// Create a hub.
 func (c *Config) Create() *Hub {
 	return newHub(c)
 }

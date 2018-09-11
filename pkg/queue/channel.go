@@ -29,7 +29,7 @@ func (q *queue) Put(message *rumour.Message) error {
 	defer func() {
 		if err := recover(); err != nil {
 			log.Error(err.(error))
-			// metric
+			// TODO: metric
 		}
 	}()
 
